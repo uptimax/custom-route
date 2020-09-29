@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Page Title</title>
+  <script src="https://www.gstatic.com/firebasejs/7.19.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/7.19.1/firebase-firestore.js"></script>
+  <script>
+    // Your web app's Firebase configuration
+    var firebaseConfig = {
+      apiKey: "AIzaSyCRmErwYDpaz_1QvHEZYmhTVnLmtAsWzU8",
+      authDomain: "boxbeat-f36de.firebaseapp.com",
+      databaseURL: "https://boxbeat-f36de.firebaseio.com",
+      projectId: "boxbeat-f36de",
+      storageBucket: "boxbeat-f36de.appspot.com",
+      messagingSenderId: "978118242334",
+      appId: "1:978118242334:web:4ea1e38988a21605993e0f",
+      measurementId: "G-W0F20R2FMR"
+    };
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+  </script>
+  <link href="style.css" rel="stylesheet">
+</head>
+
+<body>
+  <script>
+    var db = firebase.firestore();
+
+    function log(e) {
+      console.log(JSON.stringify(e));
+    }
+
+    function initApp() {
+      console.log("start fireworks");
+      db.collection("Music").limit(4).get().
+      then(res => {
+        console.log("ready");
+        docs = res.docs;
+        docs.forEach(e => {
+          data = e.data();
+          document.body.innerHTML += `
+                <div class="normalLink" router-link="" id='${data.uid}' data-type='normal' data-artist="${data.Artist}">${data.Title}</div>
+                `;
+        });
+        return ' '
+      }).then(e => {
+        /*
+            Array.from(document.querySelectorAll("[router-link]"))
+            .forEach(e=>{
+                e.addEventListener('click', evt=>{
+                    log(evt);
+                })
+            })
+            */
+            console.log("start routing");
+            startRouter();
+      }).then(console.log)
+    }
+
+
+
+    initApp();
+    
+    var normalIndex = 0;
+    var utilIndex = 100000;
+
+    function startRouter() {
+
+      routerLink = Array.from(document.querySelectorAll(".normalLink"));
+      back = Array.from(document.querySelectorAll(".back"));
+
+      back.forEach(e => {
+        e.addEventListener("click", e => {
+          history.back();
+        })
+      });
+
+      routerLink.forEach(elem => {
+        elem.addEventListener("click", e => {
+          console.log(e.target.id);
+          //history.pushState({ id }, `selected:${id}`, `./selected=${id}`);
+         // Router(id);
+          //toggle(id);
+
+        })
+      });
+
+    }
+
+    function Router(e, pop = false) {
+      pop ? (function() {
+        target = document.getElementById(e);
+        target.classList.toggle("open");
+        target.datalist.type === 'normal' ? destroyView(target) : '';
+
+      })() : (function() {
+        e.classList.toggle("open");
+        e.datalist.type == 'util' ? ' ' : createView(e.target.id);
+      })()
+    }
+
+    window.addEventListener('popstate', e => {
+      Router(e.state.id, true);
+    });
+    window.addEventListener('hashchange', e => {
+      //toggle(e.state.id);
+    });
+
+    function createView(e) {
+      normalView = document.querySelector("normalView");
+      artist = document.querySelector(e).datalist.artist;
+      initNormalTemplate(e, artist).then(temp => {
+        normalView.innerHTML += temp;
+      }).catch(err => {
+        console.log(err);
+        setTimeout(createView(e), 2000);
+      })
+    }
+
+    function destroyView(e) {
+      normalView = document.querySelector(`#normalView .${e}`);
+      normalView.remove();
+    }
+
+    initNormalTemplate = async function(id, artist) {
+      data = await db.collection(`Music`).where('artist', '==', artist).get();
+      if (!data == null) {
+        temp = normalTemplate(data);
+        return Promise.resolve(temp);
+      } else if (data == null) {
+        return Promise.reject("Opps...");
+      }
+    }
+
+    function normalTemplate(data) {
+      data = data.docs;
+      return `<p>Awesome</p>`;
+    }
+  </script>
+</body>
+
+</html>
